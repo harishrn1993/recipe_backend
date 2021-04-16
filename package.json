@@ -1,0 +1,19 @@
+{
+  "name": "recipe-backend",
+  "version": "1.0.0",
+  "description": "Backend written in NodeJS",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harishrn1993/recipe_backend.git"
+  },
+  "author": "Harish RN",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/harishrn1993/recipe_backend/issues"
+  },
+  "homepage": "https://github.com/harishrn1993/recipe_backend#readme"
+}
