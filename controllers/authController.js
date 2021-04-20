@@ -1,15 +1,17 @@
+const randomstring = require("randomstring");
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
 const User = require("../models/userModel.js");
 const asyncWrapper = require("../utils/asyncWrapper");
+const { sendSignUpEmail, forgotPasswordEmail } = require("./../utils/emailMailer");
 
 
-const createToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
-    expiresIn: process.env.JWT_EXPIRES_IN
+const createToken = (id, expiresIn) => jwt.sign({ id }, process.env.JWT_SECRET_KEY, {
+    expiresIn
 });
 
 const createTokenAndSend = (user, res) => {
-    const token = createToken(user._id);
+    const token = createToken(user._id, process.env.JWT_EXPIRES_IN);
 
     user.password = undefined;
 
@@ -19,6 +21,14 @@ const createTokenAndSend = (user, res) => {
         token
     }
     );
+}
+
+const createLink = (user, routeName) => {
+
+    const token = createToken(user._id, process.env.JWT_EXPIRES_IN_ONE_DAY);
+    //TODO link should be off React App
+    return `http://localhost:5001/api/v1/users/${routeName}/${token}`;
+
 }
 
 module.exports.signup = asyncWrapper(async (req, res, next) => {
@@ -37,6 +47,10 @@ module.exports.signup = asyncWrapper(async (req, res, next) => {
         userType
     });
     await user.save();
+
+    //create link
+    const link = createLink(user, "verifyUser");
+    await sendSignUpEmail(user.email, link);
     createTokenAndSend(user, res);
 });
 
@@ -64,9 +78,65 @@ module.exports.login = asyncWrapper(async (req, res) => {
     return createTokenAndSend(user, res);
 });
 
-module.exports.forgotPassword = (req, res) => {
-    //send otp messages
-}
+module.exports.forgotPassword = asyncWrapper(async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        res.status(400).json({ status: "Failed", message: "Please enter email" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        res.status(400).json({ status: "Failed", message: "There is no user with this email." });
+    }
+
+    const randomString = randomstring.generate(8);
+    user.password = randomString;
+    await user.save({ validateBeforeSave: false });
+
+    const link = createLink(user, "forgotPassword");
+    forgotPasswordEmail(email, randomString, link);
+
+    res.status(200).json({
+        status: "Success"
+    });
+});
+
+module.exports.resendVerification = asyncWrapper(async (req, res, next) => {
+    if (!req.user) {
+        res.status(401).json({ status: "Failed", message: "User does not exist" });
+    }
+
+    const link = createLink(req.user, "verifyUser");
+    await sendSignUpEmail(req.user.email, link);
+
+    res.status(200).json({
+        status: "Success"
+    });
+})
+
+module.exports.verifyUser = asyncWrapper(async (req, res) => {
+    console.log(req.params.id)
+    let userId = req.params.id;
+    const decodedJWT = await promisify(jwt.verify)(userId, process.env.JWT_SECRET_KEY);
+
+    if (!decodedJWT.iat > Date.now()) {
+        return res.status(402).json({ status: "Failed", message: "Should have verified within 24hrs." })
+    }
+
+    userId = decodedJWT.id;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+        return res.status(404).json({ status: "Failed", message: "User does not exist!" })
+    }
+    user.isVerified = true;
+    await user.save({ validateBeforeSave: false });
+
+    createTokenAndSend(user, res);
+});
 
 module.exports.resetPassword = (req, res) => {
     //send verification device  and reset password
@@ -110,3 +180,25 @@ module.exports.restrictTo = (...roles) => (req, _res, next) => {
     next();
 }
 
+
+
+// var apiInstance = new SibApiV3Sdk.EmailCampaignsApi();
+// var emailCampaigns = new SibApiV3Sdk.SendEmail();
+// // # Define the campaign settings\
+// emailCampaigns.name = "Campaign sent via the API";
+// emailCampaigns.subject = "My subject";
+// emailCampaigns.sender = { "name": "From name", "email": "harish.rn1993@gmail.com" };
+// emailCampaigns.type = "classic";
+// # Content that will be sent\
+// htmlContent: 'Congratulations! You successfully sent this example campaign via the Sendinblue API.',
+// # Select the recipients\
+// recipients: { listIds: [2, 7] },
+// # Schedule the sending in one hour\
+// scheduledAt: '2018-01-01 00:00:01'
+// }
+// # Make the call to the client\
+// apiInstance.createEmailCampaign(emailCampaigns).then(function (data) {
+//     console.log('API called successfully. Returned data: ' + data);
+// }, function (error) {
+//     console.error(error);
+// });

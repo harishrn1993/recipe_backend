@@ -2,6 +2,13 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
+// const phoneNumberValidator = (phoneNumber) => {
+//     if (phoneNumber.startsWith("+91")) {
+//         return !isNaN(phoneNumber.substring(0, 3)) && phoneNumber.length === 12;
+//     }
+//     return !isNaN(phoneNumber) && phoneNumber.length === 9;
+// }
+
 const userSchema = mongoose.Schema({
     username: {
         type: String,
@@ -43,7 +50,10 @@ const userSchema = mongoose.Schema({
         type: [mongoose.Types.ObjectId]
     },
     createdAt: { type: Date, default: Date.now },
-
+    isVerified: {
+        type: Boolean,
+        default: false
+    }
 });
 
 //instance methods
@@ -62,12 +72,9 @@ userSchema.pre('save', async function (next) {
 
 userSchema.pre('save', function (next) {
     if (!this.isModified('password') || this.isNew) return next();
-
     this.passwordChangedAt = Date.now() - 1000;
     next();
 });
-
-
 
 // asyncWrapper(async (givenPassword, userPassword) => await bcrypt.compare(givenPassword, userPassword));
 
