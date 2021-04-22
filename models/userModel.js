@@ -2,13 +2,6 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
-// const phoneNumberValidator = (phoneNumber) => {
-//     if (phoneNumber.startsWith("+91")) {
-//         return !isNaN(phoneNumber.substring(0, 3)) && phoneNumber.length === 12;
-//     }
-//     return !isNaN(phoneNumber) && phoneNumber.length === 9;
-// }
-
 const userSchema = mongoose.Schema({
     username: {
         type: String,
@@ -53,7 +46,8 @@ const userSchema = mongoose.Schema({
     isVerified: {
         type: Boolean,
         default: false
-    }
+    },
+    dp: String
 });
 
 //instance methods

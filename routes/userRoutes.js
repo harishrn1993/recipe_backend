@@ -16,18 +16,18 @@ router.use(authController.protect);
 
 
 router.post('/resendVerification/:id', authController.resendVerification);
+router.patch('/updatePassword', authController.updatePassword);
 
-router.patch('/updatePassword', userController.updatePassword);
-router.get('/profile', userController.getProfile);
-router.patch('/updateProfile', userController.updateProfile);
-router.delete('/deleteProfile', userController.deleteProfile);
+router.get('/profile', userController.getMyProfile);
+router.patch('/updateProfile', userController.updateMyProfile);
+router.delete('/deleteProfile', userController.deleteMyProfile);
 
-// //User routes with authentication for only admin
-// router.use(authController.restrictTo('admin'));
+//User routes with authentication for only admin
+router.use(authController.restrictTo('admin'));
 
-// router.route('/').get(userController.getAllUsers).post(userController.createUser);
+router.route('/').get(userController.getAllUsers); //.post(userController.createUser);
 
-// router.use('/:id').get(userController.getUser).patch(userController.updateUser).delete(userController.deleteUser);
+router.route('/:id').get(userController.getUser).patch(userController.updateUser).delete(userController.deleteUser);
 
 module.exports = router;
 

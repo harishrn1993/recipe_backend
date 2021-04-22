@@ -46,5 +46,8 @@
     "sib-api-v3-sdk": "^8.2.0",
     "validator": "^13.5.2",
     "xss-clean": "^0.1.1"
+  },
+  "engines": {
+    "node": ">=10.0.0"
   }
 }
