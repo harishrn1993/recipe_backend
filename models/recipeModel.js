@@ -10,10 +10,12 @@ const recipeSchema = mongoose.Schema({
     mealType: {
         type: String,
         lowercase: true,
-        enum: ["breakfast", "lunch", "dinner", "snacks"]
+        enum: ["breakfast", "lunch", "dinner", "snacks"],
+        required: [true, "mealType is missing"]
     },
     author: {
         type: mongoose.Schema.ObjectId,
+        ref: 'User',
         required: [true, "author is missing"]
     },
     ingredients: [
@@ -23,7 +25,7 @@ const recipeSchema = mongoose.Schema({
                 required: [true, "ingredients is missing"]
             },
             quantity: {
-                type: Number,
+                type: String,
                 required: [true, " is missing"]
             }
         }
@@ -44,14 +46,15 @@ const recipeSchema = mongoose.Schema({
         type: String,
         required: [true, "description is missing"]
     },
-    cookTime: {
+    cookTimeInMinutes: {
         type: Number,
         required: [true, "cookTime is missing"]
     },
     difficultyLevel: {
         type: String,
         enum: ["hard", "easy", "medium"],
-        lowercase: [true, "difficultyLevel is missing"]
+        lowercase: true,
+        required: [true, "difficultyLevel is missing"]
     },
     imagePath: {
         type: String
@@ -64,7 +67,21 @@ const recipeSchema = mongoose.Schema({
         type: Date,
         default: Date.now()
     }
-})
+},
+    {
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
+    });
+
+recipeSchema.pre(/^find/, function (next) {
+    this.populate({
+        path: "reviews",
+        select: "-__v"
+    });
+    next();
+});
+
+recipeSchema.index({ author: 1, title: 1 }, { unique: true });
 
 const Recipe = mongoose.model("Recipe", recipeSchema);
 

@@ -10,6 +10,7 @@ router.get('/getRecommeded', recipeController.getRecommeded);
 router.get('/getAll', recipeController.getAll);
 router.get('/:id', recipeController.getRecipeById);
 
+//Routes which need auth
 router.use(authController.protect);
 router.post('/', recipeController.createRecipe);
 

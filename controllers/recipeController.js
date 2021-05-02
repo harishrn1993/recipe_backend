@@ -1,4 +1,5 @@
 const { promisify } = require('util');
+const User = require('./../models/userModel');
 const Recipe = require("./../models/recipeModel");
 const asyncWrapper = require("./../utils/asyncWrapper");
 const ApiQueryFeatures = require("./../utils/apiQueryFeatures");
@@ -22,7 +23,7 @@ module.exports.getRecommeded = asyncWrapper(async (req, res, next) => {
     })
 });
 
-module.exports.getAll = asyncWrapper(async (req, res, next) => {
+module.exports.getAll = asyncWrapper(async (req, res) => {
     // To allow for nested GET reviews on tour (hack)
     let filter = {};
     if (req.params.tourId) filter = { tour: req.params.tourId };
@@ -46,12 +47,13 @@ module.exports.getAll = asyncWrapper(async (req, res, next) => {
 });
 
 module.exports.createRecipe = asyncWrapper(async (req, res) => {
+    req.body.author = req.user.id;
     const recipe = await Recipe.create(req.body);
     res.status(200).json({
         status: "Success", data: {
             data: recipe
         }
-    })
+    });
 });
 
 module.exports.getRecipeById = asyncWrapper(async (req, res) => {
@@ -80,6 +82,10 @@ module.exports.updateRecipeById = asyncWrapper(async (req, res) => {
         res.status(404).json({ status: "Failure", message: "Requested data not found" });
     }
 
+    if (user.userType !== 'admin' || req.user.id !== recipe.author) {
+        res.status(401).json({ status: "Failure", message: "You are not authorized to update" });
+    }
+
     res.status(200).json({
         status: 'success',
         data: {
@@ -93,6 +99,10 @@ module.exports.deleteRecipeById = asyncWrapper(async (req, res) => {
 
     if (!recipe) {
         res.status(404).json({ status: "Failure", message: "Requested data not found" });
+    }
+
+    if (req.user.userType !== 'admin' || req.user.id !== recipe.author) {
+        res.status(401).json({ status: "Failure", message: "You are not authorized to update" });
     }
 
     res.status(204).json({

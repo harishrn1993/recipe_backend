@@ -5,7 +5,9 @@ const rateLimiter = require("express-rate-limit");
 const mongoSanitize = require("express-mongo-sanitize");
 const xss = require("xss-clean");
 
-const userRoutes = require('./routes/userRoutes')
+const userRoutes = require('./routes/userRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const recipeRoutes = require('./routes/recipeRoutes');
 
 const app = express();
 
@@ -23,7 +25,7 @@ const limiter = rateLimiter({
 })
 // app.use('/api', limiter); //adding limiter only to api routes
 
-app.use(express.json({ limit: '50kb' })); //limit request's body size to 50kb
+app.use(express.json({ limit: '500kb' })); //limit request's body size to 50kb
 
 app.use(mongoSanitize()); //Sanitizes mongo nosql query injections
 
@@ -33,13 +35,15 @@ app.use(xss()) //sanitization against xss attack
 
 //test middleware
 app.use((req, res, next) => {
-    // console.log(req.body);
+    console.log(req.body);
     next();
 })
 
 //TODO add routes here
 // console.log(require('./controllers/authController').signup.toString())
+app.use('/api/v1/recipes', recipeRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/reviews', reviewRoutes);
 
 //route that handles non existing routes  
 app.all('*', (req, res, next) => {

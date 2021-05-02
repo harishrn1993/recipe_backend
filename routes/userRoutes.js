@@ -14,13 +14,15 @@ router.get('/verifyUser/:id', authController.verifyUser);
 //User routes with authentication for both user and admin
 router.use(authController.protect);
 
-
 router.post('/resendVerification/:id', authController.resendVerification);
 router.patch('/updatePassword', authController.updatePassword);
 
-router.get('/profile', userController.getMyProfile);
-router.patch('/updateProfile', userController.updateMyProfile);
-router.delete('/deleteProfile', userController.deleteMyProfile);
+router.patch('/addFavorite/:recipeId', userController.addFavorite);
+
+router.route('/profile')
+    .get(userController.getMyProfile)
+    .patch(userController.updateMyProfile)
+    .delete(userController.deleteMyProfile);
 
 //User routes with authentication for only admin
 router.use(authController.restrictTo('admin'));

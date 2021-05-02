@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const asyncWrapper = require('../utils/asyncWrapper');
 
 const userSchema = mongoose.Schema({
     username: {
@@ -36,10 +37,10 @@ const userSchema = mongoose.Schema({
         enum: ['user', 'admin'],
         lowercase: true
     },
-    favoriteRecipe: {
+    favoriteRecipes: {
         type: [mongoose.Types.ObjectId]
     },
-    cookedRecipe: {
+    cookedRecipes: {
         type: [mongoose.Types.ObjectId]
     },
     createdAt: { type: Date, default: Date.now },
@@ -48,7 +49,11 @@ const userSchema = mongoose.Schema({
         default: false
     },
     dp: String
-});
+},
+    {
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
+    });
 
 //instance methods
 userSchema.methods.checkPasswords = async function (givenPassword) {
@@ -57,10 +62,15 @@ userSchema.methods.checkPasswords = async function (givenPassword) {
 
 // eslint-disable-next-line func-names
 userSchema.pre('save', async function (next) {
-    if (this.isNew || this.isModified('password')) {
-        this.password = await bcrypt.hash(this.password, 12);
-        this.confirmPassword = undefined;
-        next();
+    try {
+        if (this.isNew || this.isModified('password')) {
+            this.password = await bcrypt.hash(this.password, 12);
+            this.confirmPassword = undefined;
+            next();
+        }
+    }
+    catch (err) {
+        next(err)
     }
 });
 

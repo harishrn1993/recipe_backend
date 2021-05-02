@@ -39,12 +39,12 @@ module.exports.updatePassword = asyncWrapper(async (req, res) => {
 
     req.user.password = req.body.password;
     req.user.confirmPassword = req.body.confirmPassword;
-    req.user.save();
+    await req.user.save();
 
-    createTokenAndSend(req.user.user, res);
+    createTokenAndSend(req.user, res);
 })
 
-module.exports.signup = asyncWrapper(async (req, res, next) => {
+module.exports.signup = asyncWrapper(async (req, res) => {
     const { username, password, confirmPassword, email, userType } = req.body;
     if (!(username && password && confirmPassword && email)) {
         return res.status(400).json({
@@ -116,7 +116,7 @@ module.exports.forgotPassword = asyncWrapper(async (req, res) => {
     });
 });
 
-module.exports.resendVerification = asyncWrapper(async (req, res, next) => {
+module.exports.resendVerification = asyncWrapper(async (req, res) => {
     if (!req.user) {
         res.status(401).json({ status: "Failed", message: "User does not exist" });
     }
@@ -130,7 +130,6 @@ module.exports.resendVerification = asyncWrapper(async (req, res, next) => {
 })
 
 module.exports.verifyUser = asyncWrapper(async (req, res) => {
-    console.log(req.params.id)
     let userId = req.params.id;
     const decodedJWT = await promisify(jwt.verify)(userId, process.env.JWT_SECRET_KEY);
 
@@ -157,7 +156,7 @@ module.exports.resetPassword = (req, res) => {
 
 module.exports.protect = asyncWrapper(async (req, res, next) => {
     //get header token and verify it
-    if (!(req.headers.authorization && req.headers.authorization.startsWith('bearer'))) {
+    if (!(req.headers.authorization && req.headers.authorization.startsWith('Bearer'))) {
         return next('No header');
     }
 
@@ -187,7 +186,7 @@ module.exports.protect = asyncWrapper(async (req, res, next) => {
 });
 
 module.exports.restrictTo = (...roles) => (req, _res, next) => {
-    if (!roles.includes(req.user.roles)) {
+    if (!roles.includes(req.user.userType)) {
         next("You are not authorized to use this route");
     };
     next();
@@ -199,7 +198,7 @@ module.exports.updateMyPassword = asyncWrapper(async (req, res) => {
     if (!password || !confirmPassword) {
         res.status(400).json({ status: "Failed", message: "Password cannot be empty" });
     }
-    const user = req.user;
+    const { user } = req;
 
     user.password = password;
     user.confirmPassword = confirmPassword;
