@@ -17,9 +17,7 @@ module.exports.getRecommeded = asyncWrapper(async (req, res, next) => {
 
     res.status(200).json({
         status: "Success",
-        body: {
-            data
-        }
+        data
     })
 });
 
@@ -40,15 +38,17 @@ module.exports.getAll = asyncWrapper(async (req, res) => {
     res.status(200).json({
         status: 'success',
         results: recipes.length,
-        data: {
-            data: recipes
-        }
+        data: recipes
     });
 });
 
 module.exports.createRecipe = asyncWrapper(async (req, res) => {
     req.body.author = req.user.id;
     const recipe = await Recipe.create(req.body);
+    if (recipe) {
+        req.user.cookedRecipes.push(recipe._id)
+        await req.user.save({ validateBeforeSave: false })
+    }
     res.status(200).json({
         status: "Success", data: {
             data: recipe
@@ -65,9 +65,7 @@ module.exports.getRecipeById = asyncWrapper(async (req, res) => {
 
     res.status(200).json({
         status: 'success',
-        data: {
-            data: recipe
-        }
+        data: recipe
     });
 
 });
@@ -82,7 +80,7 @@ module.exports.updateRecipeById = asyncWrapper(async (req, res) => {
         res.status(404).json({ status: "Failure", message: "Requested data not found" });
     }
 
-    if (user.userType !== 'admin' || req.user.id !== recipe.author) {
+    if (req.user.userType !== 'admin' || req.user.id !== recipe.author) {
         res.status(401).json({ status: "Failure", message: "You are not authorized to update" });
     }
 

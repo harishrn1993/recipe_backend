@@ -13,7 +13,6 @@ router.get('/verifyUser/:id', authController.verifyUser);
 
 //User routes with authentication for both user and admin
 router.use(authController.protect);
-
 router.post('/resendVerification/:id', authController.resendVerification);
 router.patch('/updatePassword', authController.updatePassword);
 

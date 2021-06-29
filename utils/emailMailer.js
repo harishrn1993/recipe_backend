@@ -26,7 +26,7 @@ exports.sendSignUpEmail = (email, verificationLink) => new Promise((resolve, rej
         to: email, // list of receivers
         subject: "Verify Email Address", // Subject line
         text: "Hello world", // plain text body
-        html: `<b>Thanks for registering, please click the below link to activate your account?
+        html: `<b>Thanks for registering with Recipe App, please click the below link to activate your account!
             
             <a href=${verificationLink}>Verify User</a> `
         // html body

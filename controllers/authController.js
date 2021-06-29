@@ -17,10 +17,8 @@ const createTokenAndSend = (user, res) => {
 
     res.status(200).json({
         status: "Success",
-        data: user,
-        token
-    }
-    );
+        data: { user, token }
+    });
 }
 
 const createLink = (user, routeName) => {
@@ -147,7 +145,7 @@ module.exports.verifyUser = asyncWrapper(async (req, res) => {
     user.isVerified = true;
     await user.save({ validateBeforeSave: false });
 
-    createTokenAndSend(user, res);
+    res.status(200).send("<h1>Verification Successfull</h1>");
 });
 
 module.exports.resetPassword = (req, res) => {
